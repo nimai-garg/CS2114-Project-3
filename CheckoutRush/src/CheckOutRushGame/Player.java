@@ -1,6 +1,5 @@
 package CheckOutRushGame;
 
-/** Keeps the average of all completed customers' ratings. */
 public class Player
 {
     private double totalRating;

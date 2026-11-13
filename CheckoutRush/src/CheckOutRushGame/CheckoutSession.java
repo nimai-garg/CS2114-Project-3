@@ -1,6 +1,5 @@
 package CheckOutRushGame;
 
-/** Tracks one day's queue, timed checkouts, and payment stages. */
 public class CheckoutSession
 {
     private final Player player;
@@ -54,7 +53,6 @@ public class CheckoutSession
         return item;
     }
 
-    /** Returns true when the total is correct, advancing to payment. */
     public boolean submitCheckout(double amount)
     {
         requireActiveCheckout();

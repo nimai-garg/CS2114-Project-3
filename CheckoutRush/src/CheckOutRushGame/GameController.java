@@ -1,6 +1,5 @@
 package CheckOutRushGame;
 
-/** Connects player input and both views to the game model. */
 public class GameController
 {
     private CheckoutGame game;
@@ -16,7 +15,6 @@ public class GameController
         calculatorView = new CalculatorView();
     }
 
-    /** Starts a fresh seven-day game. */
     public void startGame()
     {
         game = new CheckoutGame();
@@ -30,27 +28,20 @@ public class GameController
         }
     }
 
-    /** Processes one menu selection, calculator expression, or payment answer. */
     public void handlePlayerInput()
     {
         if (game.isFinished())
         {
             return;
         }
-        String input = ToolClass.readInput();
         CheckoutSession session = game.getCheckoutSession();
         if (session.getCurrentCustomer() == null)
         {
-            if ("1".equals(input))
-            {
-                handleCheckout();
-            }
-            else
-            {
-                checkoutView.displayMessage("Choose 1 to welcome the next customer.");
-            }
+            ToolClass.askOption(new String[] { "Next customer" }, 1, 1);
+            handleCheckout();
             return;
         }
+        String input = ToolClass.readInput();
         if (input.startsWith("calc "))
         {
             calculatorResult = calculatorView.calculate(input.substring(5));
@@ -84,7 +75,6 @@ public class GameController
         }
     }
 
-    /** Starts the chosen customer's checkout and asks the model to scan the basket. */
     public void handleCheckout()
     {
         if (game.isFinished())
@@ -104,7 +94,6 @@ public class GameController
             "Enter an amount, or type calc followed by an expression.");
     }
 
-    /** Displays the model's completed result and advances a completed day. */
     public void endCheckOut()
     {
         if (!checkoutPending)
@@ -116,7 +105,6 @@ public class GameController
         {
             throw new IllegalStateException("Complete payment first.");
         }
-        // The session records the rating when payment succeeds, exactly once.
         checkoutPending = false;
         checkoutView.displayCheckoutResult(session);
         if (session.isFinished())
@@ -133,7 +121,6 @@ public class GameController
         }
     }
 
-    /** Refreshes calculator output, reputation, customer timer, and input prompt. */
     public void updateView()
     {
         if (calculatorResult != null)
@@ -147,21 +134,14 @@ public class GameController
         }
     }
 
-    /** Keeps the existing entry point and replay menu. */
     public void run()
     {
         boolean playAgain = true;
         while (playAgain)
         {
             startGame();
-            checkoutView.displayMessage("[1] Play again\n[2] Exit");
-            String choice = ToolClass.readInput();
-            while (!"1".equals(choice) && !"2".equals(choice))
-            {
-                checkoutView.displayMessage("Choose 1 to play again or 2 to exit.");
-                choice = ToolClass.readInput();
-            }
-            playAgain = "1".equals(choice);
+            playAgain = ToolClass.askOption(
+                new String[] { "Play again", "Exit" }, 1, 2) == 1;
         }
     }
 }

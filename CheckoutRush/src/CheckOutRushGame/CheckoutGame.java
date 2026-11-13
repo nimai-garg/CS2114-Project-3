@@ -1,6 +1,5 @@
 package CheckOutRushGame;
 
-/** Manages seven days and the best completed game in this program run. */
 public class CheckoutGame
 {
     private static double highestReputation;
