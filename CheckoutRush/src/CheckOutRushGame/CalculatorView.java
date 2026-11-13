@@ -185,4 +185,9 @@ public class CalculatorView
     {
         return c == '+' || c == '-' || c == '*' || c == '/';
     }
+
+    public void displayResult(String result)
+    {
+        println("Calculator: " + result);
+    }
 }
