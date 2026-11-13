@@ -40,6 +40,10 @@ public class CalculatorView
             }
 
             double total = evaluateBasic(expression);
+            if (!Double.isFinite(total))
+            {
+                return "Error";
+            }
             return String.format("%.2f", total);
         }
         catch (Exception e)

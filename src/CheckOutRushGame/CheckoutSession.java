@@ -210,6 +210,10 @@ public class CheckoutSession
 
     private void validateAmount(double amount)
     {
+        if (amount >= Long.MAX_VALUE / 100.0)
+        {
+            throw new IllegalArgumentException("The amount is too large.");
+        }
         if (Double.isNaN(amount) || Double.isInfinite(amount) || amount < 0)
         {
             throw new IllegalArgumentException("Enter a finite, nonnegative amount.");

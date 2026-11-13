@@ -82,6 +82,16 @@ public class GameController
             throw new IllegalStateException("The game is finished.");
         }
         CheckoutSession session = game.getCheckoutSession();
+        if (session.getCurrentCustomer() != null)
+        {
+            checkoutView.displayMessage("Complete the current checkout first.");
+            return;
+        }
+        if (session.getCustomersRemaining() == 0)
+        {
+            checkoutView.displayMessage("No customers are waiting.");
+            return;
+        }
         session.startCheckOut();
         checkoutPending = true;
         Customer customer = session.getCurrentCustomer();
