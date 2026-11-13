@@ -1,7 +1,6 @@
 package CheckOutRushGame;
 
-public class CheckoutGameTest
-    extends student.TestCase
+public class CheckoutGameTest extends student.TestCase
 {
     private CheckoutGame game;
 
