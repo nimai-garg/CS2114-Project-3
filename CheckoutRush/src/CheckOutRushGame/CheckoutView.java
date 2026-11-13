@@ -32,7 +32,7 @@ public class CheckoutView
             System.out.println("___________");
         }
         System.out.println(
-            "You have " + customersInLine.size() + " customers in" + "line");
+            "You have " + customersInLine.size() + " customers in line.");
 
     }
 
@@ -77,20 +77,24 @@ public class CheckoutView
         ToolClass.println(message);
     }
 
+
     public void displayDay(int day)
     {
         displayMessage("\nDay " + day);
     }
 
+
     public void displayCustomer(Customer customer)
     {
-        displayMessage(customer.getIdentity() + " - " + customer.getPayment());
+        displayMessage(customer.toString());
     }
+
 
     public void displayScannedItem(GroceryItem item)
     {
-        System.out.printf("%s  $%.2f%n", item.getName(), item.getPrice());
+        displayMessage(item.toString());
     }
+
 
     public void displayStatus(CheckoutSession session)
     {
@@ -98,7 +102,8 @@ public class CheckoutView
         Customer customer = session.getCurrentCustomer();
         if (customer == null)
         {
-            displayMessage("Customers waiting: " + session.getCustomersRemaining());
+            displayMessage(
+                "Customers waiting: " + session.getCustomersRemaining());
             return;
         }
         displayCustomer(customer);
@@ -106,7 +111,8 @@ public class CheckoutView
         System.out.printf("Rating: %.2f / 5.00%n", session.getCurrentRating());
         if (session.isAwaitingChange())
         {
-            System.out.printf("Customer pays $%.2f. Enter change: %n",
+            System.out.printf(
+                "Customer pays $%.2f. Enter change: %n",
                 session.getCashGiven());
         }
         else
@@ -115,17 +121,23 @@ public class CheckoutView
         }
     }
 
+
     public void displayCheckoutResult(CheckoutSession session)
     {
-        System.out.printf("Customer rating: %.2f / 5.00 | Reputation: %.2f / 5.00%n",
-            session.getLastRating(), session.getPlayer().getReputation());
+        System.out.printf(
+            "Customer rating: %.2f / 5.00 | Reputation: %.2f / 5.00%n",
+            session.getLastRating(),
+            session.getPlayer().getReputation());
     }
+
 
     public void displayGameResult(CheckoutGame game)
     {
-        System.out.printf("Final reputation: %.2f / 5.00%n",
+        System.out.printf(
+            "Final reputation: %.2f / 5.00%n",
             game.getPlayer().getReputation());
-        System.out.printf("Highest reputation: %.2f / 5.00%n",
+        System.out.printf(
+            "Highest reputation: %.2f / 5.00%n",
             game.getHighestReputation());
     }
 }

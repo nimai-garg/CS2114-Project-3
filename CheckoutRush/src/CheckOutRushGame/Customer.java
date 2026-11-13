@@ -1,9 +1,10 @@
 package CheckOutRushGame;
 
 import static CheckOutRushGame.ToolClass.*;
+
 public class Customer
 {
-    private String[] identities = {"Student", "Worker", "Housewife"};
+    private String[] identities = { "Student", "Worker", "Housewife" };
 
     private String identity;
     private Queue<GroceryItem> groceryQueue;
@@ -31,42 +32,51 @@ public class Customer
         }
     }
 
+
     public String getPayment()
     {
         return payment;
     }
 
+
     public void setPayment(String method)
     {
-        if (method == null || (!"cash".equals(method) && !"credit".equals(method)))
+        if (method == null
+            || (!"cash".equals(method) && !"credit".equals(method)))
         {
-            throw new IllegalArgumentException("Payment must be cash or credit.");
+            throw new IllegalArgumentException(
+                "Payment must be cash or credit.");
         }
         payment = method;
     }
+
 
     public Queue<GroceryItem> getGroceryQueue()
     {
         return groceryQueue;
     }
 
+
     public void setGroceryQueue(Queue<GroceryItem> groceryQueue)
     {
         if (groceryQueue == null || groceryQueue.isEmpty())
         {
-            throw new IllegalArgumentException("The queue must have a first item.");
+            throw new IllegalArgumentException(
+                "The queue must have a first item.");
         }
         this.groceryQueue = groceryQueue;
     }
+
 
     public String getIdentity()
     {
         return identity;
     }
 
+
     public void setIdentity(String id)
     {
-        for (String str: identities)
+        for (String str : identities)
         {
             if (str.equals(id))
             {
@@ -77,17 +87,29 @@ public class Customer
         throw new IllegalArgumentException("Invalid customer identity.");
     }
 
+
     public int getPatience()
     {
         return patience;
     }
 
+
     public void setPatience(int patientTime)
     {
         if (patientTime < 0)
         {
-            throw new IllegalArgumentException("Patience must be a positive integer.");
+            throw new IllegalArgumentException(
+                "Patience must be a positive integer.");
         }
         patience = patientTime;
     }
+
+
+    @Override
+    public String toString()
+    {
+        return "Customer: " + identity + " | Payment: " + payment
+            + " | Patience: " + patience + " seconds";
+    }
+
 }
