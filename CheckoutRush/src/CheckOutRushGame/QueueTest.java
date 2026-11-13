@@ -1,9 +1,8 @@
 
 package CheckOutRushGame;
 
-import student.TestCase;
 
-public class QueueTest extends TestCase
+public class QueueTest extends student.TestCase
 {
     private Queue<String> queue;
 

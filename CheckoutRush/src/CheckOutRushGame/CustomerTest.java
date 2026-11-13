@@ -1,10 +1,8 @@
 
 package CheckOutRushGame;
 
-import student.TestCase;
-
 public class CustomerTest
-    extends TestCase
+    extends student.TestCase
 {
     private Customer customer;
 

@@ -1,9 +1,8 @@
 
 package CheckOutRushGame;
 
-import student.TestCase;
 
-public class GroceryItemTest extends TestCase
+public class GroceryItemTest extends student.TestCase
 {
     private GroceryItem item;
 
