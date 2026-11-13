@@ -11,9 +11,9 @@ The core Queue-backed model operates completely independently of any GUI compone
 
 ### 2. Running the Thin View (MVP End-to-End Path)
 The thin view communicates strictly through `GameController` without the model holding any references to UI classes:
-1. Locate **`Main.java`** or **`GameController.java`** inside `src/CheckOutRushGame/`.
+1. Locate **`Main.java`** inside `src/CheckOutRushGame/`.
 2. Right-click and select **Run As > Java Application**.
-3. Use the interactive view controls to start a checkout session, scan items from the customer's `Queue`, submit the checkout total, and issue change.
+3. Interact with the console to play.
 
 ---
 
@@ -106,4 +106,4 @@ Yes. All core model classes (`Queue`, `Customer`, `GroceryItem`, `CheckoutGame`,
 | `Main.java` & Console Driver files | All Members | Revised, Tested |
 
 ### GenAI Usage Note
-GenAI...
+GenAI was used for revising a minor part of our checkoutView class.
