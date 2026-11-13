@@ -1,6 +1,7 @@
 package CheckOutRushGame;
 
 import java.util.Scanner;
+import static CheckOutRushGame.ToolClass.*;
 
 public class Main
 {
@@ -9,18 +10,12 @@ public class Main
     {
         CalculatorView calculator = new CalculatorView();
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter an arithmetic expression:");
+        println("Enter an arithmetic expression:");
 
         if (input.hasNextLine())
         {
-            System.out.println(calculator.calculate(input.nextLine()));
+            println(calculator.calculate(input.nextLine()));
         }
 
     }
-    //~ Fields ................................................................
-
-    //~ Constructors ..........................................................
-
-    //~Public  Methods ........................................................
-
 }

@@ -2,6 +2,7 @@ package CheckOutRushGame;
 
 import java.util.ArrayList;
 import java.util.List;
+import static CheckOutRushGame.ToolClass.*;
 
 public class CalculatorView
 {
@@ -126,7 +127,7 @@ public class CalculatorView
     {
         if (expression == null || expression.trim().isEmpty())
         {
-            System.out.println("Error: Expression cannot be empty.");
+            println("Error: Expression cannot be empty.");
             return true;
         }
 
@@ -139,8 +140,7 @@ public class CalculatorView
             if (!Character.isDigit(c) && !isBasicOperator(c) && c != '('
                 && c != ')' && c != '.' && c != ' ')
             {
-                System.out
-                    .println("Error: Invalid character '" + c + "' found.");
+                println("Error: Invalid character '" + c + "' found.");
                 return true;
             }
 
@@ -153,7 +153,7 @@ public class CalculatorView
                 parenBalance--;
                 if (parenBalance < 0)
                 {
-                    System.out.println(
+                    println(
                         "Error: Unmatched closing parenthesis ')' found.");
                     return true;
                 }
@@ -164,7 +164,7 @@ public class CalculatorView
                 char nextChar = expression.charAt(i + 1);
                 if (isBasicOperator(nextChar))
                 {
-                    System.out.println(
+                    println(
                         "Error: Consecutive operators are not allowed.");
                     return true;
                 }
@@ -173,8 +173,7 @@ public class CalculatorView
 
         if (parenBalance > 0)
         {
-            System.out
-                .println("Error: Unclosed opening parenthesis '(' found.");
+            println("Error: Unclosed opening parenthesis '(' found.");
             return true;
         }
 
