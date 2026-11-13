@@ -19,10 +19,8 @@ public class CalculatorView
 
         try
         {
-            // Remove all whitespace
             expression = expression.replaceAll("\\s+", "");
 
-            // 1. Evaluate Parentheses first (innermost to outermost)
             while (expression.contains("("))
             {
                 int lastOpen = expression.lastIndexOf('(');
@@ -36,12 +34,10 @@ public class CalculatorView
                 String subExpr = expression.substring(lastOpen + 1, firstClose);
                 double subResult = evaluateBasic(subExpr);
 
-                // Replace parentheses with the computed result
                 expression = expression.substring(0, lastOpen) + subResult
                     + expression.substring(firstClose + 1);
             }
 
-            // 2. Evaluate the remaining expression
             double total = evaluateBasic(expression);
             return String.format("%.2f", total);
         }
@@ -52,8 +48,6 @@ public class CalculatorView
     }
 
 
-    // Evaluates basic expressions respecting multiplication/division before
-    // addition/subtraction
     private double evaluateBasic(String expr)
     {
         List<Double> numbers = new ArrayList<>();
@@ -65,7 +59,6 @@ public class CalculatorView
             char c = expr.charAt(i);
             if (isBasicOperator(c))
             {
-                // Handle negative numbers at the start or after an operator
                 if (c == '-' && (i == 0 || isBasicOperator(expr.charAt(i - 1))))
                 {
                     int start = i;
@@ -95,7 +88,6 @@ public class CalculatorView
             }
         }
 
-        // Pass 1: Multiplication and Division
         for (int j = 0; j < operators.size(); j++)
         {
             char op = operators.get(j);
@@ -111,7 +103,6 @@ public class CalculatorView
             }
         }
 
-        // Pass 2: Addition and Subtraction
         double result = numbers.get(0);
         for (int j = 0; j < operators.size(); j++)
         {
