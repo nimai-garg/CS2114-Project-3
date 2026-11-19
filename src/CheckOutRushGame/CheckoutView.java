@@ -26,7 +26,7 @@ public class CheckoutView
         System.out.print("\r\033");
 
         System.out.printf("Time remaining: %02d:%02d ", minutes, secs);
-
+        System.out.flush();
     }
 
 

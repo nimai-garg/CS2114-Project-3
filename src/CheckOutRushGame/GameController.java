@@ -80,6 +80,7 @@ public class GameController
             {
                 checkoutView.displayScannedItem(session.scanNextItem());
             }
+            handlePlayerInput();
             return;
         }
         if ("switch".equalsIgnoreCase(input))
@@ -95,7 +96,8 @@ public class GameController
             String result = calculator.calculate(expression);
 
             calculatorView.displayResult(result);
-
+            
+            handlePlayerInput();
             return;
         }
         if (session.getCurrentCustomer().getItemCount() > 0)
