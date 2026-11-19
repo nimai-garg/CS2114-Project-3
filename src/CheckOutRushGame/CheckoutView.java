@@ -11,16 +11,22 @@ public class CheckoutView
 
     public int chooseLaneAction()
     {
-        return ToolClass.askOption(
-            new String[] { "Next customer", "Switch lane" }, 1, 2);
+        return ToolClass
+            .askOption(new String[] { "Next customer", "Switch lane" }, 1, 2);
     }
 
 
-    public void displayTimer(double time)
+    public void displayTimer(double seconds)
     {
-        System.out.println("============================================");
-        System.out.printf("Time remaining: %.0f seconds%n", Math.ceil(time));
-        System.out.println("============================================");
+        int remaining = Math.max(0, (int)Math.ceil(seconds));
+
+        int minutes = remaining / 60;
+        int secs = remaining % 60;
+
+        System.out.print("\r\033");
+
+        System.out.printf("Time remaining: %02d:%02d ", minutes, secs);
+
     }
 
 
@@ -62,23 +68,26 @@ public class CheckoutView
         String lane = session.isExpressLaneActive() ? "Express" : "Regular";
         System.out.printf(
             "Active lane: %s | Regular waiting: %d | Express waiting (3 items or fewer): %d%n",
-            lane, session.getRegularQueueSize(), session.getExpressQueueSize());
+            lane,
+            session.getRegularQueueSize(),
+            session.getExpressQueueSize());
         Customer customer = session.getCurrentCustomer();
         if (customer == null)
         {
             return;
         }
         displayCustomer(customer);
-        displayTimer(session.getRemainingSeconds());
         System.out.printf("Rating: %.2f / 5.00%n", session.getCurrentRating());
         if (customer.getItemCount() > 0)
         {
-            displayMessage("Type scan for the next item. Items left: "
-                + customer.getItemCount());
+            displayMessage(
+                "Type scan for the next item. Items left: "
+                    + customer.getItemCount());
         }
         else if (session.isAwaitingChange())
         {
-            System.out.printf(Locale.US,
+            System.out.printf(
+                Locale.US,
                 "Customer pays $%.2f. Enter change: %n",
                 session.getCashGiven());
         }

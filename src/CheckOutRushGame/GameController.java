@@ -1,5 +1,9 @@
 package CheckOutRushGame;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.NoSuchElementException;
 
 public class GameController
@@ -7,14 +11,25 @@ public class GameController
     private CheckoutGame game;
     private final CheckoutView checkoutView;
     private final CalculatorView calculatorView;
+    private final Calculator calculator;
     private boolean checkoutPending;
+    private final ScheduledExecutorService timerExecutor =
+        Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            return thread;
+        });
+
+    private ScheduledFuture<?> timerTask;
 
     public GameController()
     {
         game = new CheckoutGame();
         checkoutView = new CheckoutView();
         calculatorView = new CalculatorView();
+        calculator = new Calculator();
     }
+
 
     public void startGame()
     {
@@ -27,6 +42,7 @@ public class GameController
             handlePlayerInput();
         }
     }
+
 
     public void handlePlayerInput()
     {
@@ -57,7 +73,8 @@ public class GameController
         {
             if (session.getCurrentCustomer().getItemCount() == 0)
             {
-                checkoutView.displayMessage("All items have already been scanned.");
+                checkoutView
+                    .displayMessage("All items have already been scanned.");
             }
             else
             {
@@ -72,13 +89,19 @@ public class GameController
         }
         if ("calc".equals(input) || input.startsWith("calc "))
         {
-            String expression = input.substring(4).replaceAll("([+*/-]) +(?=[+*/-])", "$1");
-            calculatorView.displayResult(calculatorView.calculate(expression));
+            String expression =
+                input.substring(4).replaceAll("([+*/-]) +(?=[+*/-])", "$1");
+
+            String result = calculator.calculate(expression);
+
+            calculatorView.displayResult(result);
+
             return;
         }
         if (session.getCurrentCustomer().getItemCount() > 0)
         {
-            checkoutView.displayMessage("Scan every item before submitting a total.");
+            checkoutView
+                .displayMessage("Scan every item before submitting a total.");
             return;
         }
         try
@@ -94,7 +117,8 @@ public class GameController
             }
             else if (!session.submitCheckout(amount))
             {
-                checkoutView.displayMessage("Incorrect total. Try again. (-5 seconds)");
+                checkoutView
+                    .displayMessage("Incorrect total. Try again. (-5 seconds)");
             }
         }
         catch (IllegalArgumentException exception)
@@ -108,6 +132,7 @@ public class GameController
             endCheckOut();
         }
     }
+
 
     public void handleCheckout()
     {
@@ -125,12 +150,15 @@ public class GameController
         {
             session.startCheckOut();
             checkoutPending = true;
+
+            startTimer(session);
         }
         catch (IllegalStateException exception)
         {
             checkoutView.displayMessage(exception.getMessage());
         }
     }
+
 
     public void handleSwitchLane()
     {
@@ -145,23 +173,34 @@ public class GameController
         }
     }
 
+
     public void endCheckOut()
     {
         if (!checkoutPending)
         {
             return;
         }
+
+        stopTimer();
+
         CheckoutSession session = game.getCheckoutSession();
+
         if (session.getCurrentCustomer() != null)
         {
             throw new IllegalStateException("Complete payment first.");
         }
+
         checkoutPending = false;
+
         checkoutView.displayCheckoutResult(session);
+
         if (session.isFinished())
         {
-            checkoutView.displayShiftResult(game.getCurrDay(), session.hasTimedOut());
+            checkoutView
+                .displayShiftResult(game.getCurrDay(), session.hasTimedOut());
+
             game.nextSession();
+
             if (game.isFinished())
             {
                 checkoutView.displayGameResult(game);
@@ -172,6 +211,7 @@ public class GameController
             }
         }
     }
+
 
     public void updateView()
     {
@@ -189,6 +229,7 @@ public class GameController
         }
     }
 
+
     public void run()
     {
         try
@@ -198,12 +239,39 @@ public class GameController
             {
                 startGame();
                 playAgain = ToolClass.askOption(
-                    new String[] { "Play again", "Exit" }, 1, 2) == 1;
+                    new String[] { "Play again", "Exit" },
+                    1,
+                    2) == 1;
             }
         }
         catch (NoSuchElementException exception)
         {
             checkoutView.displayMessage("Checkout Rush closed.");
         }
+    }
+
+
+    private void startTimer(CheckoutSession session)
+    {
+        stopTimer();
+
+        timerTask = timerExecutor.scheduleAtFixedRate(() -> {
+            if (session.getCurrentCustomer() != null)
+            {
+                checkoutView.displayTimer(session.getRemainingSeconds());
+            }
+        }, 0, 250, TimeUnit.MILLISECONDS);
+    }
+
+
+    private void stopTimer()
+    {
+        if (timerTask != null)
+        {
+            timerTask.cancel(false);
+            timerTask = null;
+        }
+
+        System.out.println();
     }
 }
