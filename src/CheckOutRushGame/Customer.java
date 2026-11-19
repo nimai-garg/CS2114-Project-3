@@ -13,15 +13,24 @@ public class Customer
 
     public Customer(int currDay)
     {
+        this(currDay, randomInt(currDay + 2, currDay + 4));
+    }
+
+    Customer(int currDay, int itemCount)
+    {
         if (currDay < 1 || currDay > 7)
         {
             throw new IllegalArgumentException("Day must be between 1 and 7.");
         }
 
+        if (itemCount < 1)
+        {
+            throw new IllegalArgumentException("A cart must contain at least one item.");
+        }
+
         identity = identities[randomInt(0, identities.length - 1)];
         payment = randomInt(0, 1) == 0 ? "cash" : "credit";
 
-        int itemCount = randomInt(currDay + 2, currDay + 4);
         patience = (int)Math.ceil(itemCount * (10 - 0.5 * (currDay - 1)));
         GroceryLib[] products = GroceryLib.values();
         groceryQueue = new Queue<>();
@@ -48,6 +57,12 @@ public class Customer
                 "Payment must be cash or credit.");
         }
         payment = method;
+    }
+
+
+    public int getItemCount()
+    {
+        return groceryQueue.size();
     }
 
 

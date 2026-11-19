@@ -190,6 +190,33 @@ public class CustomerTest
     }
 
 
+    public void testGetItemCount()
+    {
+        Customer shopper = new Customer(1, 3);
+
+        assertEquals(3, shopper.getItemCount());
+        shopper.getGroceryQueue().dequeue();
+        assertEquals(2, shopper.getItemCount());
+        shopper.getGroceryQueue().dequeue();
+        shopper.getGroceryQueue().dequeue();
+        assertEquals(0, shopper.getItemCount());
+    }
+
+    public void testRejectEmptyGeneratedCart()
+    {
+        try
+        {
+            new Customer(1, 0);
+            fail("Expected IllegalArgumentException");
+        }
+        catch (IllegalArgumentException exception)
+        {
+            assertEquals("A cart must contain at least one item.",
+                exception.getMessage());
+        }
+    }
+
+
     public void testToString()
     {
         customer.setIdentity("Student");

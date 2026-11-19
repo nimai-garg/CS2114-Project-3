@@ -1,5 +1,7 @@
 package CheckOutRushGame;
 
+import java.util.Locale;
+
 public class CheckoutView
 {
     public CheckoutView()
@@ -7,52 +9,10 @@ public class CheckoutView
     }
 
 
-    public void displayCheckoutLine(Queue<Customer> customersInLine)
+    public int chooseLaneAction()
     {
-        if (customersInLine.isEmpty())
-        {
-            System.out.println("No customers in line");
-            return;
-        }
-
-        System.out.println(customersInLine.peek().toString());
-        System.out.println("  Current  ");
-        System.out.println("     O     ");
-        System.out.println(" ___/|\\   ");
-        System.out.println("|__| |     ");
-        System.out.println("O  O/ \\   ");
-        System.out.println("___________");
-
-        for (int i = 1; i < customersInLine.size(); i++)
-        {
-            System.out.println("     O     ");
-            System.out.println(" ___/|\\   ");
-            System.out.println("|__| |     ");
-            System.out.println("O  O/ \\   ");
-            System.out.println("___________");
-        }
-        System.out.println(
-            "You have " + customersInLine.size() + " customers in line.");
-
-    }
-
-
-    public void displayGroceries(Queue<GroceryItem> groceries)
-    {
-        if (groceries.isEmpty())
-        {
-            System.out.println(
-                "You have completed scanning this customer's items, "
-                    + "please begin calculating his cost!");
-        }
-
-        if (groceries.isEmpty())
-        {
-            return;
-        }
-        System.out.println(groceries.peek().toString());
-        System.out.println(
-            "This customer has " + groceries.size() + "groceries left!");
+        return ToolClass.askOption(
+            new String[] { "Next customer", "Switch lane" }, 1, 2);
     }
 
 
@@ -99,25 +59,46 @@ public class CheckoutView
     public void displayStatus(CheckoutSession session)
     {
         displayPlayerInfo(session.getPlayer());
+        String lane = session.isExpressLaneActive() ? "Express" : "Regular";
+        System.out.printf(
+            "Active lane: %s | Regular waiting: %d | Express waiting (3 items or fewer): %d%n",
+            lane, session.getRegularQueueSize(), session.getExpressQueueSize());
         Customer customer = session.getCurrentCustomer();
         if (customer == null)
         {
-            displayMessage(
-                "Customers waiting: " + session.getCustomersRemaining());
             return;
         }
         displayCustomer(customer);
         displayTimer(session.getRemainingSeconds());
         System.out.printf("Rating: %.2f / 5.00%n", session.getCurrentRating());
-        if (session.isAwaitingChange())
+        if (customer.getItemCount() > 0)
         {
-            System.out.printf(
+            displayMessage("Type scan for the next item. Items left: "
+                + customer.getItemCount());
+        }
+        else if (session.isAwaitingChange())
+        {
+            System.out.printf(Locale.US,
                 "Customer pays $%.2f. Enter change: %n",
                 session.getCashGiven());
         }
         else
         {
             displayMessage("Enter grocery total:");
+        }
+        displayMessage("Calculator: type calc followed by an expression.");
+    }
+
+
+    public void displayShiftResult(int day, boolean timedOut)
+    {
+        if (timedOut)
+        {
+            displayMessage("Time expired on Day " + day + ". You were fired.");
+        }
+        else
+        {
+            displayMessage("Day " + day + " complete. Both lanes are clear.");
         }
     }
 

@@ -14,6 +14,11 @@ public class CheckoutGame
         {
             return;
         }
+        if (checkoutSession.hasTimedOut())
+        {
+            finished = true;
+            return;
+        }
         if (currDay != 7 || !checkoutSession.isFinished())
         {
             throw new IllegalStateException("Complete all seven days first.");
@@ -32,7 +37,7 @@ public class CheckoutGame
         {
             throw new IllegalStateException("Serve every customer first.");
         }
-        if (currDay == 7)
+        if (checkoutSession.hasTimedOut() || currDay == 7)
         {
             endGame();
         }

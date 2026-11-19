@@ -160,6 +160,23 @@ public class CheckoutGameTest extends student.TestCase
     }
 
 
+    public void testTimeoutEndsCareerWithoutAdvancingDay()
+    {
+        CheckoutSession session = game.getCheckoutSession();
+        session.startCheckOut();
+        session.getCurrentCustomer().setPatience(0);
+
+        assertTrue(session.expireCheckoutIfNeeded());
+        game.nextSession();
+
+        assertTrue(game.isFinished());
+        assertEquals(1, game.getCurrDay());
+        assertSame(session, game.getCheckoutSession());
+        assertEquals(1, game.getPlayer().getRatingCount());
+        assertEquals(0.0, game.getPlayer().getReputation(), 0.001);
+    }
+
+
     /**
      * Completes every customer in a session using the actual checkout methods.
      *
@@ -170,6 +187,12 @@ public class CheckoutGameTest extends student.TestCase
     {
         while (!session.isFinished())
         {
+            int activeLaneSize = session.isExpressLaneActive()
+                ? session.getExpressQueueSize() : session.getRegularQueueSize();
+            if (activeLaneSize == 0)
+            {
+                session.switchActiveLane();
+            }
             session.startCheckOut();
 
             double total = 0;

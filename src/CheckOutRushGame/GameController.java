@@ -1,12 +1,13 @@
 package CheckOutRushGame;
 
+import java.util.NoSuchElementException;
+
 public class GameController
 {
     private CheckoutGame game;
     private final CheckoutView checkoutView;
     private final CalculatorView calculatorView;
     private boolean checkoutPending;
-    private String calculatorResult;
 
     public GameController()
     {
@@ -19,7 +20,6 @@ public class GameController
     {
         game = new CheckoutGame();
         checkoutPending = false;
-        calculatorResult = null;
         checkoutView.displayDay(game.getCurrDay());
         while (!game.isFinished())
         {
@@ -37,14 +37,48 @@ public class GameController
         CheckoutSession session = game.getCheckoutSession();
         if (session.getCurrentCustomer() == null)
         {
-            ToolClass.askOption(new String[] { "Next customer" }, 1, 1);
-            handleCheckout();
+            if (checkoutView.chooseLaneAction() == 1)
+            {
+                handleCheckout();
+            }
+            else
+            {
+                handleSwitchLane();
+            }
             return;
         }
         String input = ToolClass.readInput();
-        if (input.startsWith("calc "))
+        if (session.expireCheckoutIfNeeded())
         {
-            calculatorResult = calculatorView.calculate(input.substring(5));
+            endCheckOut();
+            return;
+        }
+        if ("scan".equalsIgnoreCase(input))
+        {
+            if (session.getCurrentCustomer().getItemCount() == 0)
+            {
+                checkoutView.displayMessage("All items have already been scanned.");
+            }
+            else
+            {
+                checkoutView.displayScannedItem(session.scanNextItem());
+            }
+            return;
+        }
+        if ("switch".equalsIgnoreCase(input))
+        {
+            handleSwitchLane();
+            return;
+        }
+        if ("calc".equals(input) || input.startsWith("calc "))
+        {
+            String expression = input.substring(4).replaceAll("([+*/-]) +(?=[+*/-])", "$1");
+            calculatorView.displayResult(calculatorView.calculate(expression));
+            return;
+        }
+        if (session.getCurrentCustomer().getItemCount() > 0)
+        {
+            checkoutView.displayMessage("Scan every item before submitting a total.");
             return;
         }
         try
@@ -87,21 +121,28 @@ public class GameController
             checkoutView.displayMessage("Complete the current checkout first.");
             return;
         }
-        if (session.getCustomersRemaining() == 0)
+        try
         {
-            checkoutView.displayMessage("No customers are waiting.");
-            return;
+            session.startCheckOut();
+            checkoutPending = true;
         }
-        session.startCheckOut();
-        checkoutPending = true;
-        Customer customer = session.getCurrentCustomer();
-        checkoutView.displayCustomer(customer);
-        while (!customer.getGroceryQueue().isEmpty())
+        catch (IllegalStateException exception)
         {
-            checkoutView.displayScannedItem(session.scanNextItem());
+            checkoutView.displayMessage(exception.getMessage());
         }
-        checkoutView.displayMessage(
-            "Enter an amount, or type calc followed by an expression.");
+    }
+
+    public void handleSwitchLane()
+    {
+        CheckoutSession session = game.getCheckoutSession();
+        try
+        {
+            session.switchActiveLane();
+        }
+        catch (IllegalStateException exception)
+        {
+            checkoutView.displayMessage(exception.getMessage());
+        }
     }
 
     public void endCheckOut()
@@ -119,6 +160,7 @@ public class GameController
         checkoutView.displayCheckoutResult(session);
         if (session.isFinished())
         {
+            checkoutView.displayShiftResult(game.getCurrDay(), session.hasTimedOut());
             game.nextSession();
             if (game.isFinished())
             {
@@ -133,25 +175,35 @@ public class GameController
 
     public void updateView()
     {
-        if (calculatorResult != null)
-        {
-            calculatorView.displayResult(calculatorResult);
-            calculatorResult = null;
-        }
         if (!game.isFinished())
         {
-            checkoutView.displayStatus(game.getCheckoutSession());
+            CheckoutSession session = game.getCheckoutSession();
+            if (session.expireCheckoutIfNeeded())
+            {
+                endCheckOut();
+            }
+            else
+            {
+                checkoutView.displayStatus(session);
+            }
         }
     }
 
     public void run()
     {
-        boolean playAgain = true;
-        while (playAgain)
+        try
         {
-            startGame();
-            playAgain = ToolClass.askOption(
-                new String[] { "Play again", "Exit" }, 1, 2) == 1;
+            boolean playAgain = true;
+            while (playAgain)
+            {
+                startGame();
+                playAgain = ToolClass.askOption(
+                    new String[] { "Play again", "Exit" }, 1, 2) == 1;
+            }
+        }
+        catch (NoSuchElementException exception)
+        {
+            checkoutView.displayMessage("Checkout Rush closed.");
         }
     }
 }

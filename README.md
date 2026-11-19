@@ -1,23 +1,123 @@
-# Checkout Rush — Deliverable 3: First Prototype
+# Checkout Rush — Deliverable 4: Second Prototype + Tests
 
 ## How to Run the Project
 
-### 1. Running the Model & JUnit Test Suite (Independent of View)
-The core Queue-backed model operates completely independently of any GUI components. To execute the automated model tests:
-1. Open the project (`CS2114-Project-3`) in Eclipse.
-2. Navigate to `src/CheckOutRushGame/` in the **Package Explorer**.
-3. Right-click **`CheckoutGameTest.java`** (or `QueueTest.java`, `CustomerTest.java`, `GroceryItemTest.java`) and select **Run As > JUnit Test**.
-4. Verify that the JUnit runner tab displays green passing bars for all queue operations (`enqueue`, `dequeue`, `peek`, `isEmpty`) and session progression logic (`CheckoutGame`, `CheckoutSession`).
+### Running the Console Prototype
 
-### 2. Running the Thin View (MVP End-to-End Path)
-The thin view communicates strictly through `GameController` without the model holding any references to UI classes:
-1. Locate **`Main.java`** inside `src/CheckOutRushGame/`.
-2. Right-click and select **Run As > Java Application**.
-3. Choose **Next customer**. The controller scans the cart and prints its items. Enter the total, then enter change if the customer pays cash. Type `calc 2.50 + 3.25` during checkout to use the calculator. Serving the last customer advances the day, and finishing Day 7 displays the final reputation.
+1. Open `CS2114-Project-3` in Eclipse.
+2. In **Package Explorer**, open `src` → `CheckOutRushGame`.
+3. Right-click `Main.java` and select **Run As → Java Application**. Play in the **Console** tab.
+
+In the Eclipse console:
+
+1. Choose **1** to serve the next customer in the active lane or **2** to switch lanes.
+2. Type `scan` once per item. Use `calc 2.50 + 3.25` to calculate inside the game.
+3. Submit the grocery total in dollars. For cash payments, submit the change when prompted.
+4. Clear both lanes to advance to the next day. The career lasts seven shifts. An incorrect answer costs five seconds, and an expired checkout ends the career.
+
+### Running the Model & JUnit Test Suite (Independent of View)
+
+1. Open `src` → `CheckOutRushGame` in Eclipse. The project uses the course's `CS2-Support` project for `student.TestCase` and JUnit.
+2. Right-click `QueueTest.java`, `CustomerTest.java`, `GroceryItemTest.java`, `CheckoutGameTest.java`, or `CheckoutSessionTest.java` and select **Run As → JUnit Test**. Run `CheckoutConsoleTest.java` the same way for the console regression.
+3. Check the **JUnit** tab for a green bar.
+
+For the course test runner, select **Java 21** on the **JRE** tab in **Run → Run Configurations → JUnit**. On the **Arguments** tab, enter `-Djava.security.manager=allow` under **VM arguments**.
+
+The model-only suite passed 53 tests. The full suite passed 54, including a console input regression test. A separate run through the console completed all 56 checkouts across seven shifts and recovered from selecting an empty lane.
 
 ---
 
 Verification used Java 21 with the course student testing library. All 36 existing JUnit tests passed. A separate console run completed all 56 checkouts across seven days and recovered from empty, negative, oversized, and malformed inputs.
+
+## Reflection
+
+### How Did the Design Absorb the Express Lane?
+
+Deliverable 3 predicted changes to `CheckoutSession`, `Customer`, `GameController`, and `CheckoutView`. The feature touched those four classes, as predicted.
+
+* `CheckoutSession` owns both queues and the active lane. It routes carts with at most three items to Express and ends the shift after both queues are cleared.
+* `Customer.getItemCount()` lets the session route a cart without removing any items.
+* `GameController.handleSwitchLane()` forwards the player's request and handles a rejected switch during checkout.
+* `CheckoutView` shows the active lane and both waiting counts from the model each time it refreshes. It stores no copy of those values.
+
+`Queue`, `EmptyQueueException`, `GroceryLib`, `GroceryItem`, and `CalculatorView` stayed unchanged. The view gained access to lane labels and counts through the model's public methods. The routing and switching rules stayed in the model. One detail we hadn't planned for was that later days could generate only regular carts, so every shift now starts with at least one cart in each lane.
+
+### What Changed From the Deliverable 3 Plan?
+
+Players now scan items manually so the early-payment guard is visible in the console. The shift recap appears before advancing. If a checkout expires, the model records a zero rating and `CheckoutGame` ends the career. That class changed for timeout handling. We added a console regression alongside the model tests.
+
+A read-only checkout status object would make the next view feature cheaper to build. It could supply the lane counts, timer, and payment phase together so a second display could render the same information through one call.
+
+### Did the Model Really Stand Alone?
+Yes. All core model classes (`Queue`, `Customer`, `GroceryItem`, `CheckoutGame`, `CheckoutSession`, `Player`, `GroceryLib`, and `EmptyQueueException`) compile and pass all JUnit model tests with zero imports from `CheckoutView`, `CalculatorView`, or `GameController`. Nothing had to be moved across the model/view boundary to make the test suite run, and the model holds zero references to the view.
+
+### What Happened to Our Unknowns?
+* **Figured Out:**
+  * *Checkout & Calculator Interactions:* The player types `scan` to scan the next item and can use `CalculatorView` during checkout. `CheckoutSession` tracks scanning and enforces sequential checkout states (`submitCheckout` followed by `submitChange`).
+  * *Grocery & Customer Class Design:* Resolved by giving `GroceryItem` item attributes (name, price) populated via `GroceryLib`, and giving `Customer` a `Queue<GroceryItem>` cart alongside customer state methods.
+  * *Tracking Mistakes / Firing Condition:* Resolved by introducing a reputation system in `Player` to track the average customer rating. Incorrect totals or change subtract five seconds from the active checkout timer. The resulting customer rating is added to the average after checkout.
+* **Timer System Granularity:** One timer starts when checkout begins and covers the whole cart. Expiration ends the career. Tuning the time limits is still open.
+
+### What Doesn't Work Yet?
+
+* **Timer Display:** The console refreshes after input. If time runs out while the terminal is waiting, the game reports it on the next input.
+* **Final Playtest:** Later shifts have larger regular carts and less time per item. We still need to playtest the difficulty curve and check that the shift recap is clear.
+
+---
+
+## Next Steps
+
+### 1. Plan to Finish the Final Build (In Priority Order)
+
+1. **Stephen (Siqi Chen):** Playtest early and late shifts, tune the difficulty if needed, and rerun the model tests.
+2. **Sudeep Rawal:** Polish the console prompts and shift recap based on the playtest.
+3. **Nimai Garg:** Verify the program and tests from a clean checkout and lead the timed demo rehearsal.
+
+These proposed owners follow our Deliverable 3 roles.
+
+### 2. Stretch Goals (Committed vs. Dropped)
+* **Committed:**
+  * *Priority Express Lane Routing Rule:* Keep the implemented dual-queue routing and lane switches.
+  * *Difficulty Scaling Across Shifts:* Increasing cart sizes and tighter shift timers across later days of the 7-day career mode.
+* **Dropped:**
+  * *Helper Mode (Guiding Customers to Aisles) & Weirdo Customer Types:* Dropped to keep scope focused on cashier queue management, calculator accuracy, and dual-lane routing.
+  * *Other scope ideas:* Drop coupons, separate sale prices, inflation, staggered arrivals, and patience decay while waiting for the final build. Cash and card already work in the prototype. Keep the console interface.
+
+---
+
+## Attribution & GenAI Note
+
+### File Attribution Table
+
+The team member column records D3 contributions. Confirm and add each teammate's actual D4 contribution before submitting.
+
+| Class or test file | Team member(s) | Contribution recorded by the team |
+| --- | --- | --- |
+| `CalculatorView.java` | Sudeep, Nimai | Wrote, revised, tested |
+| `CheckoutConsoleTest.java` | Wrote and ran the console input regression |
+| `CheckoutGame.java` | Stephen, Sudeep, Nimai| Wrote, revised, tested |
+| `CheckoutGameTest.java` | Stephen, Sudeep, Nimai | Wrote, revised, tested |
+| `CheckoutSession.java` | Nimai, Stephen, Sudeep | Wrote, revised, tested |
+| `CheckoutSessionTest.java` | Wrote and ran the independent model tests |
+| `CheckoutView.java` | Sudeep | Wrote, revised, tested |
+| `Customer.java` | Nimai, Stephen, Sudeep | Wrote, tested |
+| `CustomerTest.java` | Stephen, Sudeep, Nimai | Wrote, tested |
+| `EmptyQueueException.java` | Stephen | Wrote, reviewed |
+| `GameController.java` | Nimai | Wrote, reviewed, tested |
+| `GroceryItem.java` | Stephen | Wrote, tested |
+| `GroceryItemTest.java` | Stephen | Wrote, tested |
+| `GroceryLib.java` | Stephen, Sudeep | Wrote, reviewed |
+| `Main.java` | Stephen, Sudeep, Nimai | Revised, tested |
+| `Player.java` | Nimai, Sudeep | Wrote, revised, tested |
+| `Queue.java` | Nimai, Stephen | Wrote, tested |
+| `QueueTest.java` | Stephen, Sudeep | Wrote, tested |
+| `ToolClass.java` | Nimai | Wrote, reviewed, tested |
+
+### GenAI Usage Note
+GenAI was used for revising a minor part of our checkoutView class.
+
+<details>
+<summary>Deliverable 3 reflection and plan</summary>
 
 ## Reflection
 
@@ -31,11 +131,11 @@ Verification used Java 21 with the course student testing library. All 36 existi
 Yes. All core model classes (`Queue`, `Customer`, `GroceryItem`, `CheckoutGame`, `CheckoutSession`, `Player`, `GroceryLib`, and `EmptyQueueException`) compile and pass all `student.TestCase` unit tests with zero imports from `CheckoutView`, `CalculatorView`, or `GameController`. Nothing had to be moved across the model/view boundary to make the test suite run, and the model holds zero references to the view.
 
 ### What Happened to Our Unknowns?
-* **Figured Out:** 
+* **Figured Out:**
   * *Checkout & Calculator Interactions:* Resolved by making `CalculatorView` an independent helper tool available during the shift while `CheckoutSession` tracks item scanning and enforces sequential checkout states (`submitCheckout` followed by `submitChange`).
   * *Grocery & Customer Class Design:* Resolved by giving `GroceryItem` item attributes (name, price) populated via `GroceryLib`, and giving `Customer` a `Queue<GroceryItem>` cart alongside customer state methods.
   * *Tracking Mistakes / Firing Condition:* Resolved by introducing a reputation system in `Player` to track the average customer rating. Incorrect totals or change subtract five seconds from the active checkout timer. The resulting customer rating is added to the average after checkout.
-* **Still Open:** 
+* **Still Open:**
   * *Timer System Granularity:* One timer starts when checkout begins for a customer and covers the whole cart. Waiting customers do not lose patience in line. Tuning the time limits and deciding how expiration should end a shift are still open.
 
 ### What Doesn't Work Yet?
@@ -67,15 +167,15 @@ Yes. All core model classes (`Queue`, `Customer`, `GroceryItem`, `CheckoutGame`,
     * `CalculatorView`: Arithmetic evaluation and syntax validation remain completely unchanged.
 
 ### 3. Stretch Goals (Committed vs. Dropped)
-* **Committed:** 
+* **Committed:**
   * *Priority Express Lane Routing Rule:* Adds dual-queue routing and lane-switching gameplay.
   * *Difficulty Scaling Across Shifts:* Increasing cart sizes and tighter shift timers across later days of the 7-day career mode.
-* **Dropped:** 
+* **Dropped:**
   * *Helper Mode (Guiding Customers to Aisles) & Weirdo Customer Types:* Dropped to keep scope focused on cashier queue management, calculator accuracy, and dual-lane routing.
   * *Other scope ideas:* Drop coupons, separate sale prices, inflation, staggered arrivals, and patience decay while waiting for this checkpoint. Cash and card already work in the prototype. Keep the console interface.
 
 ### 4. New Tests Needed for Deliverable 4
-* `CheckoutSessionTest`: 
+* `CheckoutSessionTest`:
   * `testExpressLaneRouting()`: Verify customers with $\le 3$ items are enqueued into `expressQueue` and customers with $> 3$ items enter the standard queue.
   * `testSwitchActiveLane()`: Verify `startCheckOut()` serves from whichever lane is currently active and toggles cleanly.
   * `testSessionFinishedRequiresBothQueuesEmpty()`: Verify `isFinished()` returns `false` if one queue still has waiting customers.
@@ -88,31 +188,4 @@ Yes. All core model classes (`Queue`, `Customer`, `GroceryItem`, `CheckoutGame`,
 * **Sudeep Rawal:** `CheckoutView` display updates, express lane UI controls, `CalculatorView` enhancements, and UI/calculator validation tests.
 * **Nimai Garg:** `GameController.handleSwitchLane()` integration, careless/adversarial input guards in the controller, and integration/driver verification.
 
----
-
-## Attribution & GenAI Note
-
-### File Attribution Table
-
-| Class or test file | Team member(s) | Contribution recorded by the team |
-| --- | --- | --- |
-| `CalculatorView.java` | Sudeep, Nimai | Wrote, revised, tested |
-| `CheckoutGame.java` | Stephen, Sudeep, Nimai| Wrote, revised, tested |
-| `CheckoutGameTest.java` | Stephen, Sudeep, Nimai | Wrote, revised, tested |
-| `CheckoutSession.java` | Nimai, Stephen, Sudeep | Wrote, revised, tested |
-| `CheckoutView.java` | Sudeep | Wrote, revised, tested |
-| `Customer.java` | Nimai, Stephen, Sudeep | Wrote, tested |
-| `CustomerTest.java` | Stephen, Sudeep, Nimai | Wrote, tested |
-| `EmptyQueueException.java` | Stephen | Wrote, reviewed |
-| `GameController.java` | Nimai | Wrote, reviewed, tested |
-| `GroceryItem.java` | Stephen | Wrote, tested |
-| `GroceryItemTest.java` | Stephen | Wrote, tested |
-| `GroceryLib.java` | Stephen, Sudeep | Wrote, reviewed |
-| `Main.java` | Stephen, Sudeep, Nimai | Revised, tested |
-| `Player.java` | Nimai, Sudeep | Wrote, revised, tested |
-| `Queue.java` | Nimai, Stephen | Wrote, tested |
-| `QueueTest.java` | Stephen, Sudeep | Wrote, tested |
-| `ToolClass.java` | Nimai | Wrote, reviewed, tested |
-
-### GenAI Usage Note
-GenAI was used for revising a minor part of our checkoutView class.
+</details>

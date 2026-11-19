@@ -2,8 +2,11 @@ package CheckOutRushGame;
 
 public class CheckoutSession
 {
+    private static final int EXPRESS_ITEM_LIMIT = 3;
     private final Player player;
     private final Queue<Customer> customers = new Queue<>();
+    private final Queue<Customer> expressQueue = new Queue<>();
+    private boolean expressLaneActive;
     private Customer currentCustomer;
     private long checkoutStart;
     private long penaltySeconds;
@@ -11,6 +14,7 @@ public class CheckoutSession
     private long cashCents;
     private boolean awaitingChange;
     private boolean finished;
+    private boolean timedOut;
     private double lastRating;
 
     public CheckoutSession(int currDay)
@@ -20,24 +24,86 @@ public class CheckoutSession
 
     CheckoutSession(int currDay, Player player)
     {
+        this(player);
         if (currDay < 1 || currDay > 7)
         {
             throw new IllegalArgumentException("Day must be between 1 and 7.");
         }
-        this.player = player;
-        for (int i = 0; i < currDay + 4; i++)
+        // Every shift offers both lanes, including when generated carts grow.
+        addCustomer(new Customer(currDay, EXPRESS_ITEM_LIMIT));
+        addCustomer(new Customer(currDay, Math.max(4, currDay + 2)));
+        for (int i = 2; i < currDay + 4; i++)
         {
-            customers.enqueue(new Customer(currDay));
+            addCustomer(new Customer(currDay));
         }
+    }
+
+    CheckoutSession(Player player)
+    {
+        this.player = player;
+    }
+
+    public void addCustomer(Customer customer)
+    {
+        if (customer == null || customer.getItemCount() == 0)
+        {
+            throw new IllegalArgumentException("A customer needs a nonempty cart.");
+        }
+        if (finished)
+        {
+            throw new IllegalStateException("The shift has ended.");
+        }
+        if (customer.getItemCount() <= EXPRESS_ITEM_LIMIT)
+        {
+            expressQueue.enqueue(customer);
+        }
+        else
+        {
+            customers.enqueue(customer);
+        }
+    }
+
+    public void switchActiveLane()
+    {
+        if (finished || currentCustomer != null)
+        {
+            throw new IllegalStateException("Switch lanes between checkouts.");
+        }
+        expressLaneActive = !expressLaneActive;
+    }
+
+    public boolean isExpressLaneActive()
+    {
+        return expressLaneActive;
+    }
+
+    public int getExpressQueueSize()
+    {
+        return expressQueue.size();
+    }
+
+    public int getRegularQueueSize()
+    {
+        return customers.size();
+    }
+
+    private Queue<Customer> activeLane()
+    {
+        return expressLaneActive ? expressQueue : customers;
     }
 
     public void startCheckOut()
     {
-        if (finished || currentCustomer != null || customers.isEmpty())
+        if (finished || currentCustomer != null)
         {
             throw new IllegalStateException("Cannot start a checkout now.");
         }
-        currentCustomer = customers.dequeue();
+        Queue<Customer> lane = activeLane();
+        if (lane.isEmpty())
+        {
+            throw new IllegalStateException("No customers are waiting in this lane.");
+        }
+        currentCustomer = lane.dequeue();
         totalCents = 0;
         cashCents = 0;
         penaltySeconds = 0;
@@ -129,7 +195,7 @@ public class CheckoutSession
         player.updateReputation(lastRating);
         currentCustomer = null;
         awaitingChange = false;
-        if (customers.isEmpty())
+        if (getCustomersRemaining() == 0)
         {
             endSession();
         }
@@ -137,11 +203,31 @@ public class CheckoutSession
 
     public void endSession()
     {
-        if (currentCustomer != null || !customers.isEmpty())
+        if (currentCustomer != null || getCustomersRemaining() != 0)
         {
             throw new IllegalStateException("Serve every customer first.");
         }
         finished = true;
+    }
+
+    public boolean expireCheckoutIfNeeded()
+    {
+        if (currentCustomer == null || getRemainingSeconds() > 0)
+        {
+            return false;
+        }
+        lastRating = 0;
+        player.updateReputation(lastRating);
+        currentCustomer = null;
+        awaitingChange = false;
+        timedOut = true;
+        finished = true;
+        return true;
+    }
+
+    public boolean hasTimedOut()
+    {
+        return timedOut;
     }
 
     public double getRemainingSeconds()
@@ -182,7 +268,7 @@ public class CheckoutSession
 
     public int getCustomersRemaining()
     {
-        return customers.size();
+        return getRegularQueueSize() + getExpressQueueSize();
     }
 
     public Player getPlayer()

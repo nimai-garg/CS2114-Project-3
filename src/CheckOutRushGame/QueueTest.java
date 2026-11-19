@@ -120,6 +120,20 @@ public class QueueTest extends student.TestCase
         assertEquals(1, queue.size());
     }
 
+    public void testFifoAfterInterleavedOperations()
+    {
+        queue.enqueue("Apple");
+        queue.enqueue("Banana");
+        assertEquals("Apple", queue.dequeue());
+        queue.enqueue("Carrot");
+        assertEquals("Banana", queue.peek());
+        assertEquals("Banana", queue.dequeue());
+        queue.enqueue("Dates");
+        assertEquals("Carrot", queue.dequeue());
+        assertEquals("Dates", queue.dequeue());
+        assertTrue(queue.isEmpty());
+    }
+
     public void testEnqueueAfterEmpty()
     {
         queue.enqueue("Apple");
